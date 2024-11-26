@@ -17,6 +17,8 @@ AddEventHandler('yoda-oxyruns:exchangeDrugs', function(sellRandom, priceCocaine)
         if nDrugs and nDrugs > 0 then
             TriggerClientEvent('yoda-oxyruns:startSellingAfterPurchase', source, Config.Price.priceCocaineSelling, nDrugs)
         end
+    else
+        print('you do not have this item')
     end
 end)
 
