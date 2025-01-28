@@ -2,7 +2,7 @@
 
 local NpcBuyers = Config.Buyers
 local priceCocaineSelling = Config.Price.priceCocaineSelling
-
+local target = Config.TARGET
 
 local currentBuyerPed = nil
 local currentBuyerZone = nil
@@ -13,7 +13,11 @@ local cooldown = Config.Cooldown
 
 local function CleanUpBuyer()
     if currentBuyerZone then
-        exports.ox_target:removeZone(currentBuyerZone)
+        if target == 'ox' then
+            exports.ox_target:removeZone(currentBuyerZone)
+        else
+            exports['qb-target']:RemoveZone('target_sell')
+        end
         currentBuyerZone = nil
     end
     if currentBlip then
@@ -69,30 +73,52 @@ local function CreateBuyerNPC()
         AddTextComponentString("Cocaine Buyer")
         EndTextCommandSetBlipName(currentBlip)
 
-        currentBuyerZone = exports.ox_target:addBoxZone({
-            coords = vec3(buyer.coordx, buyer.coordy, buyer.coordz + 1),
-            size = vec3(1.5, 1.5, 1.5),
-            rotation = 90,
-            debug = drawZones,
-            options = {{
-                name = 'yoda-oxyruns:sellToBuyer',
-                icon = 'fa-solid fa-cube',
-                label = 'Sell Cocaine',
-                onSelect = function()
-                    local success = math.random() < 0.7 -- 70% of chance to sell de drugs
-                    if success then
-                        TriggerServerEvent('yoda-oxyruns:sellToBuyer')
-                        TriggerEvent('yoda-oxyruns:sellDrugsAnim')
-                    else
-                        exports.ox_lib:notify(Config.Notify.dealFailed)
-                        exports['ps-dispatch']:DrugSale()
-                        CleanUpBuyer()
-                        CreateBuyerWithDelay()
-                        TaskWanderStandard(currentBuyerPed)
+        if target == 'ox' then
+            currentBuyerZone = exports.ox_target:addBoxZone({
+                coords = vec3(buyer.coordx, buyer.coordy, buyer.coordz + 1),
+                size = vec3(1.5, 1.5, 1.5),
+                rotation = 90,
+                debug = drawZones,
+                options = {{
+                    name = 'yoda-oxyruns:sellToBuyer',
+                    icon = 'fa-solid fa-cube',
+                    label = 'Sell Cocaine',
+                    onSelect = function()
+                        local success = math.random() < 0.7 -- 70% of chance to sell de drugs
+                        if success then
+                            TriggerServerEvent('yoda-oxyruns:sellToBuyer')
+                            TriggerEvent('yoda-oxyruns:sellDrugsAnim')
+                        else
+                            exports.ox_lib:notify(Config.Notify.dealFailed)
+                            exports['ps-dispatch']:DrugSale()
+                            CleanUpBuyer()
+                            CreateBuyerWithDelay()
+                            TaskWanderStandard(currentBuyerPed)
+                        end
                     end
-                end
-            }}
-        })
+                }}
+            })
+        else
+            local name = 'target_sell'
+            local targetId = exports['qb-target']:AddCircleZone(name, vector3(buyer.coordx, buyer.coordy, buyer.coordz + 1), 2.0, {
+                name = name, debugPoly = false , useZ = true}, {
+                    options = {{label = 'Sell Cocaine', icon = 'fa-solid fa-cube', 
+                    action = function () 
+                        local success = math.random() < 0.7 -- 70% of chance to sell de drugs
+                        if success then
+                            TriggerServerEvent('yoda-oxyruns:sellToBuyer')
+                            TriggerEvent('yoda-oxyruns:sellDrugsAnim')
+                        else
+                            exports.ox_lib:notify(Config.Notify.dealFailed)
+                            exports['ps-dispatch']:DrugSale()
+                            CleanUpBuyer()
+                            CreateBuyerWithDelay()
+                            TaskWanderStandard(currentBuyerPed)
+                        end
+                    end}},
+                    distance = 2.0
+            })
+        end
 
         return currentBuyerPed, currentBuyerZone, currentBlip
     end

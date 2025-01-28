@@ -1,5 +1,7 @@
 Config = {}
 
+Config.TARGET = 'qb' -- ox or qb
+
 Config.Cooldown = {
     npc = { -- Cooldown between deliveries, min and max in minutes
         min = 1,
